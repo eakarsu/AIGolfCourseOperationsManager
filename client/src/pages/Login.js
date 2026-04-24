@@ -1,0 +1,86 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
+const API_BASE = 'http://localhost:4001/api';
+
+function Login() {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const response = await axios.post(`${API_BASE}/auth/login`, { email, password });
+      const { token } = response.data;
+      localStorage.setItem('token', token);
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err.response?.data?.error || err.response?.data?.message || 'Login failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fillDemoCredentials = () => {
+    setEmail('admin@golfclub.com');
+    setPassword('password123');
+    setError('');
+  };
+
+  return (
+    <div className="login-page">
+      <div className="login-container">
+        <div className="login-logo">
+          <span className="login-logo-icon">&#9971;</span>
+          <h1>Golf Course Operations</h1>
+          <p>Management System</p>
+        </div>
+
+        <form className="login-form" onSubmit={handleLogin}>
+          {error && <div className="login-error">{error}</div>}
+
+          <div className="form-group">
+            <label htmlFor="email">Email Address</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Enter your email"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+
+          <button type="submit" className="btn-login" disabled={loading}>
+            {loading ? 'Signing in...' : 'Sign In'}
+          </button>
+
+          <button type="button" className="btn-demo" onClick={fillDemoCredentials}>
+            Auto-fill Demo Credentials
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default Login;
