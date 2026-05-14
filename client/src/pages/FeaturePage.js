@@ -17,27 +17,35 @@ function FeaturePage({ title, icon, apiEndpoint, columns, formFields }) {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState(null);
 
   const getAuthHeaders = useCallback(() => {
     const token = localStorage.getItem('token');
     return { headers: { Authorization: `Bearer ${token}` } };
   }, []);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (page = currentPage) => {
     setLoading(true);
     setError('');
     try {
       const endpoint = apiEndpoint.startsWith('/api')
         ? apiEndpoint.replace('/api', '')
         : apiEndpoint;
-      const res = await axios.get(`${API_BASE}${endpoint}`, getAuthHeaders());
+      const res = await axios.get(`${API_BASE}${endpoint}`, {
+        ...getAuthHeaders(),
+        params: { page, limit: 20 },
+      });
       let items = [];
       if (Array.isArray(res.data)) {
         items = res.data;
+        setPagination(null);
       } else if (res.data && Array.isArray(res.data.data)) {
         items = res.data.data;
+        setPagination(res.data.pagination || null);
       } else if (res.data && typeof res.data === 'object') {
         items = [res.data];
+        setPagination(null);
       }
       setData(items);
       setFilteredData(items);
@@ -53,7 +61,12 @@ function FeaturePage({ title, icon, apiEndpoint, columns, formFields }) {
     } finally {
       setLoading(false);
     }
-  }, [apiEndpoint, getAuthHeaders, navigate]);
+  }, [apiEndpoint, getAuthHeaders, navigate, currentPage]);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    fetchData(page);
+  };
 
   useEffect(() => {
     fetchData();
@@ -146,7 +159,11 @@ function FeaturePage({ title, icon, apiEndpoint, columns, formFields }) {
       setSelectedItem(null);
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.error || 'Operation failed');
+      if (err.response?.status === 409) {
+        setError('Already Booked: ' + (err.response?.data?.error || 'This tee time slot is already booked.'));
+      } else {
+        setError(err.response?.data?.error || 'Operation failed');
+      }
     }
   };
 
@@ -279,24 +296,47 @@ function FeaturePage({ title, icon, apiEndpoint, columns, formFields }) {
               <p>Click "Add New" to create your first record.</p>
             </div>
           ) : (
-            <table className="data-table">
-              <thead>
-                <tr>
-                  {columns.map((col) => (
-                    <th key={col.key}>{col.label}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredData.map((item, index) => (
-                  <tr key={item.id || item._id || index} onClick={() => handleRowClick(item)}>
+            <>
+              <table className="data-table">
+                <thead>
+                  <tr>
                     {columns.map((col) => (
-                      <td key={col.key}>{formatCellValue(item[col.key], col.key)}</td>
+                      <th key={col.key}>{col.label}</th>
                     ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {filteredData.map((item, index) => (
+                    <tr key={item.id || item._id || index} onClick={() => handleRowClick(item)}>
+                      {columns.map((col) => (
+                        <td key={col.key}>{formatCellValue(item[col.key], col.key)}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {pagination && pagination.totalPages > 1 && (
+                <div className="pagination-bar">
+                  <button
+                    className="btn-secondary"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage <= 1}
+                  >
+                    &laquo; Prev
+                  </button>
+                  <span className="pagination-info">
+                    Page {pagination.page} of {pagination.totalPages} ({pagination.total} records)
+                  </span>
+                  <button
+                    className="btn-secondary"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage >= pagination.totalPages}
+                  >
+                    Next &raquo;
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

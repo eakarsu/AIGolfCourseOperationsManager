@@ -4,8 +4,14 @@ const pool = require('../db');
 
 router.get('/', async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM handicaps ORDER BY player_name');
-    res.json(result.rows);
+    const page = Math.max(1, parseInt(req.query.page) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit) || 20));
+    const offset = (page - 1) * limit;
+    const [countResult, dataResult] = await Promise.all([
+      pool.query('SELECT COUNT(*) FROM handicaps'),
+      pool.query('SELECT * FROM handicaps ORDER BY player_name LIMIT $1 OFFSET $2', [limit, offset]),
+    ]);
+    res.json({ data: dataResult.rows, pagination: { page, limit, total: parseInt(countResult.rows[0].count), totalPages: Math.ceil(parseInt(countResult.rows[0].count) / limit) } });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch handicaps' });

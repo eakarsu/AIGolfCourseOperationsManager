@@ -1287,3 +1287,19 @@ h1, h2, h3, h4, h5, h6 {
     padding: 32px 24px;
   }
 }
+
+/* Pagination Bar */
+.pagination-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 8px;
+}
+
+.pagination-info {
+  font-size: 14px;
+  color: #64748b;
+}

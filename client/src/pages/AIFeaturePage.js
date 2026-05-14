@@ -17,6 +17,7 @@ function AIFeaturePage({ title, icon, description, endpoint, inputFields }) {
   const [error, setError] = useState('');
   const [currentResponse, setCurrentResponse] = useState(null);
   const [history, setHistory] = useState([]);
+  const [liveContext, setLiveContext] = useState(null);
 
   const getAuthHeaders = useCallback(() => {
     const token = localStorage.getItem('token');
@@ -38,6 +39,11 @@ function AIFeaturePage({ title, icon, description, endpoint, inputFields }) {
         : endpoint;
       const res = await axios.post(`${API_BASE}${ep}`, formData, getAuthHeaders());
 
+      // Capture live context if returned by backend
+      if (res.data && res.data.live_context) {
+        setLiveContext(res.data.live_context);
+      }
+
       const responseData = {
         inputs: { ...formData },
         response: res.data,
@@ -50,6 +56,10 @@ function AIFeaturePage({ title, icon, description, endpoint, inputFields }) {
       if (err.response?.status === 401) {
         localStorage.removeItem('token');
         navigate('/login');
+        return;
+      }
+      if (err.response?.status === 429) {
+        setError('Rate limit reached: Max 20 AI requests per hour. Please wait before trying again.');
         return;
       }
       setError(err.response?.data?.error || 'AI analysis failed. Please try again.');
@@ -313,6 +323,32 @@ function AIFeaturePage({ title, icon, description, endpoint, inputFields }) {
         {error && (
           <div className="error-banner">
             <span>&#9888;</span> {error}
+          </div>
+        )}
+
+        {liveContext && (
+          <div className="ai-context-card" style={{
+            background: 'linear-gradient(135deg, #e0f2fe 0%, #e8f5e9 100%)',
+            border: '1px solid #7dd3fc',
+            borderRadius: '12px',
+            padding: '16px',
+            marginBottom: '20px',
+            fontSize: '14px',
+          }}>
+            <strong style={{ color: '#0369a1' }}>&#128202; Live Data Context (sent to AI)</strong>
+            <div style={{ marginTop: '8px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+              {Object.entries(liveContext).map(([key, value]) => (
+                <span key={key} style={{
+                  background: '#fff',
+                  border: '1px solid #bae6fd',
+                  borderRadius: '6px',
+                  padding: '4px 10px',
+                  color: '#0c4a6e',
+                }}>
+                  {key.replace(/_/g, ' ')}: <strong>{String(value)}</strong>
+                </span>
+              ))}
+            </div>
           </div>
         )}
 

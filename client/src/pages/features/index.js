@@ -604,5 +604,58 @@ export const aiFeatureConfigs = [
       { key: 'upcoming_events', label: 'Upcoming Events', type: 'textarea' },
       { key: 'priority', label: 'Priority Focus', type: 'select', options: ['Aesthetics', 'Playability', 'Cost Savings', 'Tournament Prep', 'Seasonal Transition'] }
     ]
-  }
+  },
+  // ─── New AI endpoints (server/routes/ai.js) ──────────────────────────────
+  {
+    path: 'ai/round-pairing',
+    title: 'Round Pairing',
+    icon: '⛳',
+    description: 'Group players into balanced foursomes by handicap and pace, with rationale.',
+    endpoint: '/api/ai/round-pairing',
+    inputFields: [
+      { key: 'date', label: 'Date', type: 'date' },
+      { key: 'players_text', label: 'Players (one per line: name, handicap, pace)', type: 'textarea' },
+      { key: 'goal', label: 'Pairing goal', type: 'select', options: ['balanced', 'social_mix', 'competitive', 'pace_optimized'] },
+    ],
+  },
+  {
+    path: 'ai/facility-utilization-forecast',
+    title: 'Facility Utilization Forecast',
+    icon: '\u{1F4C5}',
+    description: 'Predict peak windows and pricing actions per facility from 60-day tee-time demand by dow/hour.',
+    endpoint: '/api/ai/facility-utilization-forecast',
+    inputFields: [
+      { key: 'facility', label: 'Facility / Course Name', type: 'text' },
+      { key: 'horizon_days', label: 'Forecast horizon (days)', type: 'number' },
+      { key: 'season_notes', label: 'Seasonal / weather notes', type: 'textarea' },
+    ],
+  },
+  {
+    path: 'ai/member-retention',
+    title: 'Member Retention',
+    icon: '\u{1F4AB}',
+    description: 'Personalized retention offers per member with estimated save probability.',
+    endpoint: '/api/ai/member-retention',
+    inputFields: [
+      { key: 'recency_days', label: 'Round / payment recency threshold (days)', type: 'number' },
+      { key: 'risk_focus', label: 'Risk focus', type: 'select', options: ['churn', 'downgrade', 'low_engagement', 'lapsed'] },
+      { key: 'budget_per_member', label: 'Max retention spend per member ($)', type: 'number' },
+      { key: 'notes', label: 'Notes / context', type: 'textarea' },
+    ],
+  },
+  {
+    path: 'ai/tournament-format-recommendation',
+    title: 'Tournament Format Recommendation',
+    icon: '\u{1F3C6}',
+    description: 'Recommend a tournament format that fits field size, skill mix, audience, and time budget.',
+    endpoint: '/api/ai/tournament-format-recommendation',
+    inputFields: [
+      { key: 'event_name', label: 'Event name', type: 'text' },
+      { key: 'field_size', label: 'Expected field size', type: 'number' },
+      { key: 'audience', label: 'Audience', type: 'select', options: ['mixed_membership', 'men', 'women', 'junior', 'senior', 'corporate', 'charity'] },
+      { key: 'duration_hours', label: 'Target duration (hours)', type: 'number' },
+      { key: 'preferred_formats', label: 'Preferred formats (comma-separated)', type: 'text' },
+      { key: 'notes', label: 'Notes / constraints', type: 'textarea' },
+    ],
+  },
 ];
