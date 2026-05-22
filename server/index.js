@@ -110,6 +110,7 @@ app.use('/api/tournament-brackets', require('./routes/tournamentBrackets'));
 app.use('/api/course-feedback', require('./routes/courseFeedback'));
 app.use('/api/agentic-marshal', require('./routes/agenticMarshal'));
 app.use('/api/member-ltv', require('./routes/memberLTVChurn'));
+app.use('/api/turf-stress-irrigation-planner', require('./routes/turfStressIrrigationPlanner'));
 
 // AI results routes
 app.get('/api/ai-results', async (req, res) => {

@@ -25,6 +25,12 @@ import GapNoOnCourseMobileMessaging from './pages/GapNoOnCourseMobileMessaging';
 import GapNoFileUploadForSwingVideos from './pages/GapNoFileUploadForSwingVideos';
 import GapNoAuditLog from './pages/GapNoAuditLog';
 
+import CodexCustomVizFeature from './pages/CodexCustomVizFeature';
+import CodexOperationsFeature from './pages/CodexOperationsFeature';
+
+import TimelineView from './pages/TimelineView';
+import TurfStressIrrigationPlanner from './pages/TurfStressIrrigationPlanner';
+
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('token');
   if (!token) {
@@ -37,6 +43,10 @@ function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/insights/timeline" element={<ProtectedRoute><TimelineView /></ProtectedRoute>} />
+        <Route path="/codex/custom-viz" element={<ProtectedRoute><CodexCustomVizFeature /></ProtectedRoute>} />
+        <Route path="/codex/operations" element={<ProtectedRoute><CodexOperationsFeature /></ProtectedRoute>} />
+
         <Route path="/login" element={<Login />} />
         <Route
           path="/dashboard"
@@ -99,6 +109,7 @@ function App() {
           <Route path="/gap-no-on-course-mobile-messaging" element={<GapNoOnCourseMobileMessaging />} />
           <Route path="/gap-no-file-upload-for-swing-videos" element={<GapNoFileUploadForSwingVideos />} />
           <Route path="/gap-no-audit-log" element={<GapNoAuditLog />} />
+          <Route path="/turf-stress-irrigation-planner" element={<ProtectedRoute><TurfStressIrrigationPlanner /></ProtectedRoute>} />
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
