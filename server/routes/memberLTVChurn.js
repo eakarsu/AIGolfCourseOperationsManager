@@ -3,30 +3,27 @@
 const express = require('express');
 const pool = require('../db');
 const authMiddleware = require('../middleware/auth');
-const fetch = require('node-fetch');
+const axios = require('axios');
 
 const router = express.Router();
 router.use(authMiddleware);
 
 async function callAI(systemPrompt, userPrompt) {
   if (!process.env.OPENROUTER_API_KEY) throw new Error('OPENROUTER_API_KEY not configured');
-  const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
+  const { data: d } = await axios.post('https://openrouter.ai/api/v1/chat/completions', {
+    model: process.env.OPENROUTER_MODEL || 'anthropic/claude-3-5-sonnet-20241022',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt }
+    ],
+    temperature: 0.3, max_tokens: 2500
+  }, {
     headers: {
       'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
       'Content-Type': 'application/json',
       'X-Title': 'Golf Course - Member LTV / Churn'
-    },
-    body: JSON.stringify({
-      model: process.env.OPENROUTER_MODEL || 'anthropic/claude-3-5-sonnet-20241022',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
-      ],
-      temperature: 0.3, max_tokens: 2500
-    })
+    }
   });
-  const d = await r.json();
   if (d.error) throw new Error(d.error.message || 'AI failed');
   return d.choices[0].message.content;
 }

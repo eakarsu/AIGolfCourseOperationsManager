@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../db');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'golf_course_secret_key_2024';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
@@ -64,15 +64,6 @@ router.post('/login', async (req, res) => {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Login failed' });
   }
-});
-
-// GET /api/auth/demo-credentials
-router.get('/demo-credentials', (req, res) => {
-  res.json({
-    email: 'admin@golfclub.com',
-    password: 'password123',
-    note: 'Use these credentials to log in as the demo admin user',
-  });
 });
 
 // GET /api/auth/me

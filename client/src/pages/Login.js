@@ -28,12 +28,6 @@ function Login() {
     }
   };
 
-  const fillDemoCredentials = () => {
-    setEmail('admin@golfclub.com');
-    setPassword('password123');
-    setError('');
-  };
-
   return (
     <div className="login-page">
       <div className="login-container">
@@ -74,9 +68,6 @@ function Login() {
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
 
-          <button type="button" className="btn-demo" onClick={fillDemoCredentials}>
-            Auto-fill Demo Credentials
-          </button>
         </form>
       </div>
     </div>

@@ -1,4 +1,7 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
+if (process.env.ALLOW_DEMO_SEED !== 'true' || process.env.NODE_ENV === 'production') {
+  throw new Error('Demo seed is quarantined; set ALLOW_DEMO_SEED=true outside production to run it explicitly');
+}
 const pool = require('./db');
 const bcrypt = require('bcryptjs');
 
@@ -333,10 +336,15 @@ async function seed() {
     console.log('Tables created.');
 
     // Seed demo user
-    const hashedPassword = await bcrypt.hash('password123', 10);
+    const demoPassword = process.env.SEED_DEMO_PASSWORD;
+    const demoEmail = process.env.SEED_ADMIN_EMAIL;
+    if (!demoPassword || demoPassword.length < 12 || !demoEmail) {
+      throw new Error('SEED_DEMO_PASSWORD (12+ characters) and SEED_ADMIN_EMAIL are required');
+    }
+    const hashedPassword = await bcrypt.hash(demoPassword, 12);
     await client.query(
       'INSERT INTO users (email, password, name, role) VALUES ($1, $2, $3, $4)',
-      ['admin@golfclub.com', hashedPassword, 'Club Administrator', 'admin']
+      [demoEmail.trim().toLowerCase(), hashedPassword, 'Club Administrator', 'admin']
     );
     console.log('Demo user created.');
 
@@ -781,10 +789,7 @@ async function seed() {
     `);
 
     console.log('All seed data inserted successfully!');
-    console.log('');
-    console.log('Demo credentials:');
-    console.log('  Email: admin@golfclub.com');
-    console.log('  Password: password123');
+    console.log('Demo administrator created from environment-provided credentials.');
 
   } catch (err) {
     console.error('Seed error:', err);

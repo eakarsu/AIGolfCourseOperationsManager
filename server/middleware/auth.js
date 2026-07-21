@@ -1,8 +1,11 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'golf_course_secret_key_2024';
+const JWT_SECRET = process.env.JWT_SECRET;
 
 function authMiddleware(req, res, next) {
+  if (!JWT_SECRET || JWT_SECRET.length < 32) {
+    return res.status(503).json({ error: 'Authentication is not configured' });
+  }
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {

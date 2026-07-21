@@ -1,7 +1,7 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const express = require('express');
 const cors = require('cors');
-const rateLimit = require('express-rate-limit');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const authenticateToken = require('./middleware/auth');
 const pool = require('./db');
 
@@ -31,7 +31,7 @@ app.use(express.json());
 const aiRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 20,
-  keyGenerator: (req) => req.user ? `user:${req.user.id}` : req.ip,
+  keyGenerator: (req) => req.user ? `user:${req.user.id}` : ipKeyGenerator(req.ip),
   message: { error: 'AI rate limit exceeded. Max 20 requests/hour.' },
   standardHeaders: true,
   legacyHeaders: false,
@@ -64,7 +64,7 @@ async function initDb() {
   }
 }
 
-initDb();
+if (process.env.AUTO_INIT_SCHEMA === 'true') initDb();
 
 // Public routes
 app.use('/api/auth', require('./routes/auth'));
@@ -129,6 +129,8 @@ app.get('/api/ai-results', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch AI results' });
   }
 });
+
+app.use('/api/governed-course-operations', require('./governance'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
