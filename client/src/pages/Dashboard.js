@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { featureConfigs, aiFeatureConfigs } from './features';
 
-const API_BASE = 'http://localhost:4001/api';
+const API_BASE = '/api';
 
 function Dashboard() {
   const navigate = useNavigate();

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
-const API_BASE = 'http://localhost:4001/api';
+const API_BASE = '/api';
 
 function FeaturePage({ title, icon, apiEndpoint, columns, formFields }) {
   const navigate = useNavigate();
