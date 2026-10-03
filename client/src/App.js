@@ -1,3 +1,5 @@
+import { useLocation } from 'react-router-dom';
+import AppSidebar from './components/AppSidebar';
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
@@ -39,10 +41,19 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+function SidebarFrame({ children }) {
+  const location = useLocation();
+  const show = Boolean(localStorage.getItem('token')) && !['/login', '/register'].includes(location.pathname);
+  return <div className={show ? 'codex-nav-shell' : undefined}>
+    {show && <AppSidebar />}
+    {children}
+  </div>;
+}
+
 function App() {
   return (
     <Router>
-      <Routes>
+      <SidebarFrame><Routes>
         <Route path="/insights/timeline" element={<ProtectedRoute><TimelineView /></ProtectedRoute>} />
         <Route path="/codex/custom-viz" element={<ProtectedRoute><CodexCustomVizFeature /></ProtectedRoute>} />
         <Route path="/codex/operations" element={<ProtectedRoute><CodexOperationsFeature /></ProtectedRoute>} />
@@ -112,7 +123,7 @@ function App() {
           <Route path="/turf-stress-irrigation-planner" element={<ProtectedRoute><TurfStressIrrigationPlanner /></ProtectedRoute>} />
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
-      </Routes>
+      </Routes></SidebarFrame>
     </Router>
   );
 }
