@@ -11,13 +11,12 @@ function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  const loginWith = async (credentials) => {
     setError('');
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_BASE}/auth/login`, { email, password });
+      const response = await axios.post(`${API_BASE}/auth/login`, credentials);
       const { token } = response.data;
       localStorage.setItem('token', token);
       navigate('/dashboard');
@@ -26,6 +25,21 @@ function Login() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    await loginWith({ email, password });
+  };
+
+  const handleDemoLogin = async () => {
+    const demoEmail = process.env.REACT_APP_DEMO_EMAIL || '';
+    const demoPassword = process.env.REACT_APP_DEMO_PASSWORD || '';
+    if (!demoEmail || !demoPassword) {
+      setError('Demo credentials are not configured.');
+      return;
+    }
+    await loginWith({ email: demoEmail, password: demoPassword });
   };
 
   return (
@@ -66,12 +80,12 @@ function Login() {
 
           <button
             type="button"
-            onClick={() => { setEmail(process.env.REACT_APP_DEMO_EMAIL || ''); setPassword(process.env.REACT_APP_DEMO_PASSWORD || ''); }}
-            disabled={!process.env.REACT_APP_DEMO_EMAIL || !process.env.REACT_APP_DEMO_PASSWORD}
-            aria-label="Auto Fill Demo Credentials"
-            style={{ width: '100%', marginBottom: '12px', padding: '10px 14px', borderRadius: '8px', border: '1px solid currentColor', background: 'transparent', cursor: 'pointer' }}
+            onClick={handleDemoLogin}
+            disabled={loading || !process.env.REACT_APP_DEMO_EMAIL || !process.env.REACT_APP_DEMO_PASSWORD}
+            aria-label="Log In as Demo"
+            style={{ width: '100%', marginBottom: '12px', padding: '10px 14px', borderRadius: '8px', border: '1px solid currentColor', background: 'transparent', cursor: loading ? 'wait' : 'pointer', opacity: loading ? 0.6 : 1 }}
           >
-            Auto Fill Demo Credentials
+            {loading ? 'Signing in…' : 'Log In as Demo'}
           </button>
           <button type="submit" className="btn-login" disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In'}

@@ -1,3 +1,4 @@
+import AIReportLibrary from "./components/AIReportLibrary";
 import { useLocation } from 'react-router-dom';
 import AppSidebar from './components/AppSidebar';
 import React from 'react';
@@ -52,7 +53,7 @@ function SidebarFrame({ children }) {
 
 function App() {
   return (
-    <Router>
+    <><AIReportLibrary floating /><Router>
       <SidebarFrame><Routes>
         <Route path="/insights/timeline" element={<ProtectedRoute><TimelineView /></ProtectedRoute>} />
         <Route path="/codex/custom-viz" element={<ProtectedRoute><CodexCustomVizFeature /></ProtectedRoute>} />
@@ -124,7 +125,7 @@ function App() {
 
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes></SidebarFrame>
-    </Router>
+    </Router></>
   );
 }
 

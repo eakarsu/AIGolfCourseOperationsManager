@@ -1,3 +1,5 @@
+import CompleteAIExamples, { AIRequiredButton } from "../components/CompleteAIExamples";
+import AIReport from "../components/AIReport";
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -68,235 +70,23 @@ function AIFeaturePage({ title, icon, description, endpoint, inputFields }) {
     }
   };
 
-  const renderValue = (value, depth = 0) => {
-    if (value === null || value === undefined) return <span className="ai-paragraph">N/A</span>;
-
-    if (typeof value === 'string') {
-      return <p className="ai-paragraph">{value}</p>;
-    }
-
-    if (typeof value === 'number') {
-      return <span className="ai-metric-value">{value}</span>;
-    }
-
-    if (typeof value === 'boolean') {
-      return <span className="ai-tag">{value ? 'Yes' : 'No'}</span>;
-    }
-
-    if (Array.isArray(value)) {
-      if (value.length === 0) return <p className="ai-paragraph">No items</p>;
-
-      if (typeof value[0] === 'string' || typeof value[0] === 'number') {
-        return (
-          <ul className="ai-list">
-            {value.map((item, i) => (
-              <li key={i}>{String(item)}</li>
-            ))}
-          </ul>
-        );
-      }
-
-      return (
-        <div>
-          {value.map((item, i) => (
-            <div key={i} style={{ marginBottom: '12px', paddingLeft: depth > 0 ? '16px' : '0' }}>
-              {typeof item === 'object' && item !== null
-                ? renderObject(item, depth + 1)
-                : <p className="ai-paragraph">{String(item)}</p>
-              }
-            </div>
-          ))}
-        </div>
-      );
-    }
-
-    if (typeof value === 'object') {
-      return renderObject(value, depth);
-    }
-
-    return <p className="ai-paragraph">{String(value)}</p>;
-  };
-
-  const renderObject = (obj, depth = 0) => {
-    const entries = Object.entries(obj);
-    if (entries.length === 0) return <p className="ai-paragraph">No data</p>;
-
-    const numericEntries = entries.filter(([, v]) => typeof v === 'number');
-    const stringEntries = entries.filter(([, v]) => typeof v === 'string');
-    const arrayEntries = entries.filter(([, v]) => Array.isArray(v));
-    const objectEntries = entries.filter(([, v]) => typeof v === 'object' && v !== null && !Array.isArray(v));
-    const boolEntries = entries.filter(([, v]) => typeof v === 'boolean');
-
-    return (
-      <div>
-        {/* Render numeric values as a metric grid */}
-        {numericEntries.length > 0 && numericEntries.length <= 8 && depth < 2 && (
-          <div className="ai-metric-grid">
-            {numericEntries.map(([key, val]) => (
-              <div className="ai-metric" key={key}>
-                <span className="ai-metric-value">
-                  {typeof val === 'number' && key.toLowerCase().includes('price')
-                    ? `$${val.toFixed(2)}`
-                    : typeof val === 'number' && key.toLowerCase().includes('percent')
-                      ? `${val}%`
-                      : val}
-                </span>
-                <div className="ai-metric-label">
-                  {formatLabel(key)}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {numericEntries.length > 8 && (
-          <div className="ai-section">
-            {numericEntries.map(([key, val]) => (
-              <div className="ai-highlight" key={key}>
-                <div className="ai-highlight-label">{formatLabel(key)}</div>
-                <div className="ai-highlight-value">{val}</div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Render string values */}
-        {stringEntries.map(([key, val]) => (
-          <div className="ai-section" key={key}>
-            {depth < 2 && <div className="ai-section-title">{formatLabel(key)}</div>}
-            {depth >= 2 && <strong style={{ color: '#4c1d95', fontSize: '13px' }}>{formatLabel(key)}: </strong>}
-            <p className="ai-paragraph">{val}</p>
-          </div>
-        ))}
-
-        {/* Render boolean values */}
-        {boolEntries.map(([key, val]) => (
-          <div key={key} style={{ marginBottom: '8px' }}>
-            <span className="ai-tag">{formatLabel(key)}: {val ? 'Yes' : 'No'}</span>
-          </div>
-        ))}
-
-        {/* Render arrays */}
-        {arrayEntries.map(([key, val]) => (
-          <div className="ai-section" key={key}>
-            <div className="ai-section-title">{formatLabel(key)}</div>
-            {renderValue(val, depth + 1)}
-          </div>
-        ))}
-
-        {/* Render nested objects */}
-        {objectEntries.map(([key, val]) => (
-          <div className="ai-section" key={key}>
-            <div className="ai-section-title">{formatLabel(key)}</div>
-            {renderValue(val, depth + 1)}
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  const formatLabel = (key) => {
-    return key
-      .replace(/_/g, ' ')
-      .replace(/([A-Z])/g, ' $1')
-      .replace(/\b\w/g, (c) => c.toUpperCase())
-      .trim();
-  };
-
-  const parseAIContent = (response) => {
-    if (!response) return null;
-    // The backend returns { recommendation: "...", report: "...", analysis: "...", etc. }
-    // Get the first non-null value from the response object
-    let raw = response;
-    if (typeof response === 'object' && !Array.isArray(response)) {
-      const keys = Object.keys(response);
-      for (const key of keys) {
-        if (response[key] && typeof response[key] === 'string') {
-          raw = response[key];
-          break;
-        }
-        if (response[key] && typeof response[key] === 'object') {
-          raw = response[key];
-          break;
-        }
-      }
-    }
-    // If the raw content is a string, try to parse it as JSON
-    if (typeof raw === 'string') {
-      // Try to extract JSON from markdown code blocks
-      const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/);
-      if (jsonMatch) {
-        try {
-          return JSON.parse(jsonMatch[1].trim());
-        } catch (e) { /* fall through */ }
-      }
-      // Try direct JSON parse
-      try {
-        return JSON.parse(raw);
-      } catch (e) {
-        // Return as formatted text
-        return raw;
-      }
-    }
-    return raw;
-  };
-
-  const renderTextContent = (text) => {
-    if (!text) return null;
-    // Split by double newlines for paragraphs, render markdown-like formatting
-    const sections = text.split(/\n\n+/);
-    return (
-      <div className="ai-text-content">
-        {sections.map((section, i) => {
-          const trimmed = section.trim();
-          if (!trimmed) return null;
-          // Check if it's a heading (starts with # or **)
-          if (trimmed.startsWith('# ')) {
-            return <h3 key={i} className="ai-section-title">{trimmed.replace(/^#+\s*/, '')}</h3>;
-          }
-          if (trimmed.startsWith('## ')) {
-            return <h4 key={i} className="ai-section-title">{trimmed.replace(/^#+\s*/, '')}</h4>;
-          }
-          // Check if it's a list
-          const lines = trimmed.split('\n');
-          const isList = lines.every(l => /^\s*[-*•]\s/.test(l) || /^\s*\d+[.)]\s/.test(l));
-          if (isList) {
-            return (
-              <ul key={i} className="ai-list">
-                {lines.map((line, j) => (
-                  <li key={j}>{line.replace(/^\s*[-*•]\s*/, '').replace(/^\s*\d+[.)]\s*/, '')}</li>
-                ))}
-              </ul>
-            );
-          }
-          // Bold text handling
-          const formatted = trimmed.split(/(\*\*[^*]+\*\*)/g).map((part, j) => {
-            if (part.startsWith('**') && part.endsWith('**')) {
-              return <strong key={j}>{part.slice(2, -2)}</strong>;
-            }
-            return part;
-          });
-          return <p key={i} className="ai-paragraph">{formatted}</p>;
-        })}
-      </div>
-    );
-  };
+  const formatLabel = (key) => key
+    .replace(/_/g, ' ')
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/\b\w/g, (character) => character.toUpperCase())
+    .trim();
 
   const renderResponse = (responseData) => {
     if (!responseData) return null;
-
-    const { response, timestamp } = responseData;
-    const content = parseAIContent(response);
-
     return (
       <div className="ai-response-card">
         <div className="ai-response-header">
           <span>{icon}</span>
           <h3>{title} Results</h3>
-          <span className="timestamp">{timestamp}</span>
+          <span className="timestamp">{responseData.timestamp}</span>
         </div>
         <div className="ai-response-body">
-          {typeof content === 'string' ? renderTextContent(content) : renderValue(content)}
+          <AIReport response={responseData.response} title={`${title} report`} />
         </div>
       </div>
     );
@@ -354,18 +144,18 @@ function AIFeaturePage({ title, icon, description, endpoint, inputFields }) {
 
         <div className="ai-input-card">
           <h3>Input Parameters</h3>
-          <form className="ai-input-form" onSubmit={handleSubmit}>
+          <CompleteAIExamples busy={loading} context="Golf operations planning"><form className="ai-input-form" onSubmit={handleSubmit}>
             {inputFields.map((field) => (
               <div className="form-group" key={field.key}>
                 <label>{field.label}</label>
                 {field.type === 'textarea' ? (
-                  <textarea
+                  <textarea data-ai-field={field.key}
                     value={formData[field.key]}
                     onChange={(e) => handleChange(field.key, e.target.value)}
                     placeholder={`Enter ${field.label.toLowerCase()}`}
                   />
                 ) : field.type === 'select' ? (
-                  <select
+                  <select data-ai-field={field.key}
                     value={formData[field.key]}
                     onChange={(e) => handleChange(field.key, e.target.value)}
                   >
@@ -375,7 +165,7 @@ function AIFeaturePage({ title, icon, description, endpoint, inputFields }) {
                     ))}
                   </select>
                 ) : (
-                  <input
+                  <input data-ai-field={field.key}
                     type={field.type || 'text'}
                     value={formData[field.key]}
                     onChange={(e) => handleChange(field.key, field.type === 'number' ? e.target.value : e.target.value)}
@@ -385,7 +175,7 @@ function AIFeaturePage({ title, icon, description, endpoint, inputFields }) {
                 )}
               </div>
             ))}
-            <button type="submit" className="btn-ai-submit" disabled={loading}>
+            <AIRequiredButton data-ai-generate type="submit" className="btn-ai-submit" disabled={loading}>
               {loading ? (
                 <>
                   <div className="spinner"></div>
@@ -396,8 +186,8 @@ function AIFeaturePage({ title, icon, description, endpoint, inputFields }) {
                   <span>&#9889;</span> Run AI Analysis
                 </>
               )}
-            </button>
-          </form>
+            </AIRequiredButton>
+          </form></CompleteAIExamples>
         </div>
 
         {loading && (
