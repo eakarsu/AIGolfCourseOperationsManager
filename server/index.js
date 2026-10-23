@@ -76,6 +76,7 @@ app.get('/api/health', (req, res) => {
 
 // Apply auth middleware to all other /api/* routes
 app.use('/api', authenticateToken);
+app.use('/api/feature-pack', require('./featurePack').createRouter());
 
 // Apply AI rate limiter to all /api/ai/* routes (after auth)
 app.use('/api/ai', aiRateLimiter);
